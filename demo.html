@@ -183,6 +183,7 @@
             }
             .tm-steps .tm-heading {
                 font-size: 20px;
+                text-align: center;
             }
             .tm-steps ul {
                 padding-left: 0;
@@ -193,11 +194,42 @@
                 line-height: 1.2;
                 padding: 10px 0;
             }
-            .tm-steps ul li {
-                transition: background-color 0.3s ease, font-weight 0.3s ease;
-            }
             .tm-action-buttons{
                 display:none;
+            }
+            .tm-steps{ 
+                position: relative;
+            }
+            .tm-quick-links{
+                position: absolute;
+                width: auto;
+                bottom: 30px;
+                border-top: 1px solid #efefef;
+                left: 10px;
+                right: 10px;
+                padding: 5px;
+                padding-top: 15px;
+            }
+            .tm-quick-links span{
+                padding: 5px 5px;
+                background: #ffffff;
+                border-radius: 5px;
+                box-shadow: 0px 0px 2px 2px #c7c4c4;
+                
+            }
+            .tm-quick-links>span+span{
+                margin-left: 8px;
+            }
+            .tm-quick-links>span:nth-child(even){
+                background: #fc5e01;
+                
+            }
+            .tm-quick-links span a{
+                text-decoration: none;
+                color: #000;
+            }
+            .tm-quick-links span:nth-child(even) a{
+                color: #fff;
             }
             
         </style>
@@ -222,8 +254,8 @@
                     <div class="tm-steps">
                         <div class="tm-action-buttons">
                         </div>
-                        <div class="tm-heading">Steps for base js placement:</div>
-                        <script>responsiveVoice.speak("welcome", "US English Female");</script>
+                        <div class="tm-heading">Tutorial 1: Base js placement</div>
+                        <button id="start">🎤 Start Voice Control</button>
                         <ul>
                             <li><p id="step1"></p></li>
                             <li><p id="step2"></p></li>
@@ -235,12 +267,20 @@
                             <li><p id="step8"></p></li>
                             <li><p id="step9"></p></li>
                         </ul>
-                        
+                        <div class="tm-quick-links">
+                            <span><a href="fcm.html" atl="FCM">Tutorial 2</a></span>
+                            <span><a href="evnts.html" atl="Events integration">Tutorial 3</a></span>
+                            <span><a href="users.html" atl="User tracking">Tutorial 4</a></span>
+                            <span><a href="#" atl="FAQ">FAQ</a></span>
+                        </div>
                     </div>
                 </div>
                 <div class="split-right">
                     <div class="slideshow-container">
                         
+                        <div class="mySlides fade">
+                            <img src="assets/images/jp1.png">  
+                        </div>
                         <div class="mySlides fade">
                             <img src="assets/images/1.png">  
                         </div>
@@ -265,9 +305,7 @@
                         <div class="mySlides fade">
                             <img src="assets/images/8.png">
                         </div>
-                        <div class="mySlides fade">
-                            <img src="assets/images/jp1.png">
-                        </div>
+                        
                         
                         <a class="prev" onclick="plusSlides(-1)">❮</a>
                         <a class="next" onclick="plusSlides(1)">❯</a>
@@ -276,8 +314,55 @@
                 </div>
             </div>
         </main>
+        
+    <script>
+        
+        const startBtn = document.getElementById("start");
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true; // Keep the speech recognition running
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    let isRecognizing = false; // To prevent multiple triggers
+
+    recognition.onstart = () => {
+        console.log("Voice recognition started");
+        isRecognizing = true;
+    };
+
+    recognition.onend = () => {
+        console.log("Voice recognition stopped. Restarting...");
+        isRecognizing = false;
+        recognition.start(); // Restart after stopping
+    };
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+        console.log("You said: ", transcript);
+
+        if (isRecognizing) { // Only act if speech recognition is still active
+            // Prevent multiple triggers in quick succession
+            if (transcript.includes("next") && !transcript.includes("back")) {
+                plusSlides(1);  // Move forward
+            } else if ((transcript.includes("back") || transcript.includes("previous")) && !transcript.includes("next")) {
+                plusSlides(-1); // Move backward
+            }
+            recognition.stop(); // Stop listening temporarily after a command
+        }
+    };
+
+    recognition.onerror = (event) => {
+        console.error("Speech Recognition Error: ", event.error);
+    };
+
+    recognition.start(); // Start voice recognition when page loads
+}
+    </script>
+
         <script>
-            
             /*== typewrite ==*/
             function typeWriter(elementId, text, speed, button) {
                 let element = document.getElementById(elementId);
@@ -355,6 +440,7 @@
             
             function showSlides(n) {
                 let slides = document.getElementsByClassName("mySlides");
+                let quickLinks = document.querySelector(".tm-quick-links");
                 let prevButton = document.querySelector(".prev");
                 let nextButton = document.querySelector(".next");
                 let listItems = document.querySelectorAll(".tm-steps ul li"); // Select all list items
@@ -372,15 +458,28 @@
                 slides[slideIndex - 1].style.display = "block";
 
                 // Highlight the current step
-                listItems.forEach((li, index) => {
-                    if (index === slideIndex - 1) {
-                        li.style.border = "2px solid rgb(209, 231, 253)";  // Light blue highlight
-                        li.style.borderRadius = "5px";
-                        li.style.padding = "5px";
-                    } else {
-                        li.style.border = "2px solid #fff"; // Reset others
-                    }
-                });
+                function highlightCurrentStep(currentStep) {
+                    let listItems = document.querySelectorAll(".tm-steps ul li");
+                
+                    listItems.forEach((li, index) => {
+                        if (index === currentStep - 1 && index !== 0) { // Skip the first li (index 0)
+                            li.style.border = "2px solid rgb(209, 231, 253)"; // Highlight active step
+                            li.style.padding = "10px"; // Ensure padding remains after adding border
+                            li.style.borderRadius = "5px"; // Optional: add rounded corners
+                        } else {
+                            li.style.border = "none"; // Remove border from inactive steps
+                        }
+                    });
+                }
+                highlightCurrentStep(slideIndex);
+                
+                // Show quick links only on the last slide
+                if (slideIndex === slides.length) {
+                    quickLinks.style.display = "block"; // Show
+                } else {
+                    quickLinks.style.display = "none"; // Hide
+                    //nextButton.classList.add("tm-glow")
+                }
 
                 // Disable left arrow on first slide
                 prevButton.style.opacity = slideIndex === 1 ? "0.5" : "1";
@@ -394,6 +493,7 @@
                 const currentStep = slideIndex; // Get the current slide index
                 const stepText = [
                     
+                    '',
                     '1. Open login.netcoresmartech.com on browser.',
                     '2. Login using panel name, user name and password (ask poc to help with the credentials).',
                     '3. Click on settings icon.',
@@ -401,12 +501,11 @@
                     '5. Choose option: STANDARD.',
                     '6. Now choose protocol and enter site url.',
                     '7. Once done, you can see the entry of your site.',
-                    '8. Click on the GET JAVASCRIPT SDK and you will get the js code which you have to place in the headtag of your site.',
-                    '9. duplicate'
+                    '8. Click on the GET JAVASCRIPT SDK and you will get the js code which you have to place in the headtag of your site.'
                 ];
             
                 // Call the typeWriter function for the current step
-                typeWriter(`step${currentStep}`, stepText[currentStep - 1], 50);
+                typeWriter(`step${currentStep}`, stepText[currentStep - 1], 60);
             }
             /*==end==*/
         </script>
